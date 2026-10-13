@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Selfie Challenge 📸</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #101827;
+      color: white;
+      padding: 25px 15px;
+    }
+    .card {
+      max-width: 420px;
+      margin: 25px auto;
+      padding: 20px;
+      background: #1e293b;
+      border-radius: 20px;
+    }
+    video, img {
+      width: 100%;
+      border-radius: 14px;
+      margin-top: 15px;
+    }
+    button {
+      padding: 13px 18px;
+      margin: 8px 4px;
+      border: 0;
+      border-radius: 12px;
+      background: #38bdf8;
+      color: #101827;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    p { line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🤳 Selfie Challenge</h1>
+    <p>Prends un selfie si tu es d'accord.
+    Ta photo ne sera pas envoyée automatiquement.</p>
+
+    <video id="camera" autoplay playsinline hidden></video>
+    <canvas id="canvas" hidden></canvas>
+    <img id="preview" hidden alt="Aperçu du selfie">
+
+    <div>
+      <button id="start">Ouvrir la caméra</button>
+      <button id="take" hidden>Prendre la photo</button>
+      <button id="again" hidden>Recommencer</button>
+      <button id="send" hidden>Envoyer la photo</button>
+    </div>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const preview = document.getElementById('preview');
+    const status = document.getElementById('status');
+    let stream;
+
+    document.getElementById('start').onclick = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user' },
+          audio: false
+        });
+        video.srcObject = stream;
+        video.hidden = false;
+        document.getElementById('take').hidden = false;
+        status.textContent = 'Caméra activée. Tu peux prendre ton selfie.';
+      } catch {
+        status.textContent =
+          'Caméra indisponible. Vérifie les autorisations du navigateur.';
+      }
+    };
+
+    document.getElementById('take').onclick = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      preview.src = canvas.toDataURL('image/jpeg', 0.85);
+      preview.hidden = false;
+      video.hidden = true;
+      document.getElementById('take').hidden = true;
+      document.getElementById('again').hidden = false;
+      document.getElementById('send').hidden = false;
+      status.textContent = 'Vérifie ta photo avant de la partager.';
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    };
+
+    document.getElementById('again').onclick = () => {
+      preview.hidden = true;
+      document.getElementById('send').hidden = true;
+      document.getElementById('again').hidden = true;
+      document.getElementById('start').click();
+    };
+
+    document.getElementById('send').onclick = () => {
+      const link = document.createElement('a');
+      link.href = preview.src;
+      link.download = 'selfie.jpg';
+      link.click();
+      status.textContent =
+        'Photo téléchargée sur cet appareil. Pour l’envoyer, joins-la à un message.';
+    };
+  </script>
+</body>
+</html>
